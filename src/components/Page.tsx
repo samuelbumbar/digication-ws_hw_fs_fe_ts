@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box } from '@mui/material';
-import { useDrop } from 'react-dnd';
+import { useDragDropManager, useDrop } from 'react-dnd';
 
 import Grid from './Grid';
 import Module from './Module';
 import { GUTTER_SIZE } from '../constants';
 import ModuleInterface from '../types/ModuleInterface';
+import { globalY2ModuleY } from '../helpers';
 
 const Page = () => {
   const [modules, setModules] = React.useState<ModuleInterface[]>([
@@ -28,12 +29,21 @@ const Page = () => {
     [modules],
   );
 
-  const handleModuleUpdate = (updatedModule: ModuleInterface) =>
-    setModules(
-      modules.map((module: ModuleInterface) =>
-        module.id === updatedModule.id ? updatedModule : module,
-      ),
-    );
+  const dragDropManager = useDragDropManager();
+  const monitor = dragDropManager.getMonitor();
+
+  useEffect(() => monitor.subscribeToOffsetChange(() => {
+    const offset = monitor.getSourceClientOffset();
+    const itemId = monitor.getItem()?.id;
+
+    if (itemId && offset)
+      setModules(
+        modules.map((module: ModuleInterface) =>
+          module.id === itemId ? { ...module, coord: { ...module.coord, y: globalY2ModuleY(offset.y) } } : module,
+        ),
+      );
+  }), [modules, monitor]);
+
 
   return (
     <Box
@@ -53,7 +63,6 @@ const Page = () => {
         <Module
           key={module.id}
           data={module}
-          onModuleUpdate={handleModuleUpdate}
         />
       ))}
     </Box>

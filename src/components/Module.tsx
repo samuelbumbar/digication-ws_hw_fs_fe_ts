@@ -4,11 +4,10 @@ import { useDrag, useDragDropManager } from 'react-dnd';
 import { useRafLoop } from 'react-use';
 
 import ModuleInterface from '../types/ModuleInterface';
-import { localY2ModuleY, moduleW2LocalWidth, moduleX2LocalX, moduleY2LocalY } from '../helpers';
+import { moduleW2LocalWidth, moduleX2LocalX, moduleY2LocalY } from '../helpers';
 
 type ModuleProps = {
   data: ModuleInterface;
-  onModuleUpdate: (updatedModule: ModuleInterface) => void;
 };
 
 const Module = (props: ModuleProps) => {
@@ -17,7 +16,6 @@ const Module = (props: ModuleProps) => {
       id,
       coord: { x, y, w, h },
     },
-    onModuleUpdate,
   } = props;
 
   // Transform x, y to left, top
@@ -45,9 +43,6 @@ const Module = (props: ModuleProps) => {
       top: newTop,
       left: newLeft,
     });
-
-    if (newTop !== top)
-      onModuleUpdate({ id, coord: { x, y: localY2ModuleY(newTop), w, h } });
   }, false);
 
   // Wire the module to DnD drag system
