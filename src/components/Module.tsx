@@ -4,7 +4,7 @@ import { useDrag, useDragDropManager } from 'react-dnd';
 import { useRafLoop } from 'react-use';
 
 import ModuleInterface from '../types/ModuleInterface';
-import { moduleW2LocalWidth, moduleX2LocalX, moduleY2LocalY } from '../helpers';
+import { computeGridColumnUnit, moduleW2LocalWidth, moduleX2LocalX, moduleY2LocalY } from '../helpers';
 
 type ModuleProps = {
   data: ModuleInterface;
@@ -36,7 +36,7 @@ const Module = (props: ModuleProps) => {
     }
 
     const newTop = initialPosition.current.top + movement.y;
-    const newLeft = initialPosition.current.left + movement.x;
+    const newLeft = computeGridColumnUnit(initialPosition.current.left + movement.x);
 
     // Update new position of the module
     setPosition({

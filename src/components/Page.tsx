@@ -17,6 +17,9 @@ const Page = () => {
 
   const containerRef = React.useRef<HTMLDivElement>();
 
+  const dragDropManager = useDragDropManager();
+  const monitor = dragDropManager.getMonitor();
+
   // Wire the module to DnD drag system
   const [, drop] = useDrop({ accept: 'module' });
   drop(containerRef);
@@ -29,19 +32,19 @@ const Page = () => {
     [modules],
   );
 
-  const dragDropManager = useDragDropManager();
-  const monitor = dragDropManager.getMonitor();
-
   useEffect(() => monitor.subscribeToOffsetChange(() => {
-    const offset = monitor.getSourceClientOffset();
+    const rawOffset = monitor.getSourceClientOffset();
     const itemId = monitor.getItem()?.id;
 
-    if (itemId && offset)
-      setModules(
-        modules.map((module: ModuleInterface) =>
-          module.id === itemId ? { ...module, coord: { ...module.coord, y: globalY2ModuleY(offset.y) } } : module,
-        ),
-      );
+    if (!itemId || !rawOffset) {
+      return;
+    }
+
+    setModules(
+      modules.map((module: ModuleInterface) =>
+        module.id === itemId ? { ...module, coord: { ...module.coord, y: globalY2ModuleY(rawOffset.y) } } : module,
+      ),
+    );
   }), [modules, monitor]);
 
 
