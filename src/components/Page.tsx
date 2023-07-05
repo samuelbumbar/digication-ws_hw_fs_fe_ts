@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { Box } from '@mui/material';
-import { useDragDropManager, useDrop } from 'react-dnd';
+import { useDrop } from 'react-dnd';
 
 import Grid from './Grid';
 import Module from './Module';
 import { GUTTER_SIZE } from '../constants';
 import ModuleInterface from '../types/ModuleInterface';
-import { globalY2ModuleY } from '../helpers';
+import useCollistionSafeCoord from './useCollistionSafeCoord';
 
 const Page = () => {
   const [modules, setModules] = React.useState<ModuleInterface[]>([
@@ -16,9 +16,6 @@ const Page = () => {
   ]);
 
   const containerRef = React.useRef<HTMLDivElement>();
-
-  const dragDropManager = useDragDropManager();
-  const monitor = dragDropManager.getMonitor();
 
   // Wire the module to DnD drag system
   const [, drop] = useDrop({ accept: 'module' });
@@ -32,21 +29,21 @@ const Page = () => {
     [modules],
   );
 
-  useEffect(() => monitor.subscribeToOffsetChange(() => {
-    const rawOffset = monitor.getSourceClientOffset();
-    const itemId = monitor.getItem()?.id;
+  const { isModuleCollistionSafe } = useCollistionSafeCoord();
 
-    if (!itemId || !rawOffset) {
-      return;
+  const handleModuleUpdate = (updatedModule: ModuleInterface): boolean => {
+    if (isModuleCollistionSafe(updatedModule, modules)) {
+      setModules(
+        modules.map((module: ModuleInterface) =>
+          module.id === updatedModule.id ? updatedModule : module,
+        ),
+      );
+
+      return true;
     }
 
-    setModules(
-      modules.map((module: ModuleInterface) =>
-        module.id === itemId ? { ...module, coord: { ...module.coord, y: globalY2ModuleY(rawOffset.y) } } : module,
-      ),
-    );
-  }), [modules, monitor]);
-
+    return false;
+  };
 
   return (
     <Box
@@ -66,6 +63,7 @@ const Page = () => {
         <Module
           key={module.id}
           data={module}
+          onModuleUpdate={handleModuleUpdate}
         />
       ))}
     </Box>

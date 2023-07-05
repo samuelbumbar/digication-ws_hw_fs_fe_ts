@@ -4,10 +4,11 @@ import { useDrag, useDragDropManager } from 'react-dnd';
 import { useRafLoop } from 'react-use';
 
 import ModuleInterface from '../types/ModuleInterface';
-import { computeGridColumnUnit, moduleW2LocalWidth, moduleX2LocalX, moduleY2LocalY } from '../helpers';
+import { localY2ModuleY, localX2ModuleX, moduleW2LocalWidth, moduleX2LocalX, moduleY2LocalY, computeGridColumnUnit } from '../helpers';
 
 type ModuleProps = {
   data: ModuleInterface;
+  onModuleUpdate: (updatedModule: ModuleInterface) => boolean;
 };
 
 const Module = (props: ModuleProps) => {
@@ -16,6 +17,7 @@ const Module = (props: ModuleProps) => {
       id,
       coord: { x, y, w, h },
     },
+    onModuleUpdate,
   } = props;
 
   // Transform x, y to left, top
@@ -37,12 +39,18 @@ const Module = (props: ModuleProps) => {
 
     const newTop = initialPosition.current.top + movement.y;
     const newLeft = computeGridColumnUnit(initialPosition.current.left + movement.x);
+    let isModuleCollistionSafe: boolean = true;
+
+    if (newTop !== top)
+      isModuleCollistionSafe = onModuleUpdate({ id, coord: { x: localX2ModuleX(newLeft), y: localY2ModuleY(newTop), w, h } });
 
     // Update new position of the module
-    setPosition({
-      top: newTop,
-      left: newLeft,
-    });
+    if (isModuleCollistionSafe) {
+      setPosition({
+        top: newTop,
+        left: newLeft,
+      });
+    }
   }, false);
 
   // Wire the module to DnD drag system
